@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Environment variables (NEVER commit this!)
+.env
+.env.local
+.env.production
+.env.development
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (optional - keep locally, don't commit)
+ADMIN_*.md
+CHANGES_SUMMARY.md
+GOOGLE_AUTH_SETUP.md
+LOGIN_UPDATED.md
+MAKE_USER_ADMIN.md
+NAVBAR_FOOTER_UPDATE.md
+NEW_FEATURES_SUMMARY.md
+PROFILE_*.md
+QUICK_START.md
+SETUP_README.md
+SUPABASE_SETUP.md
+USER_PROFILE_SETUP.md
+WELCOME_EMAIL_GUIDE.md
+YEAR_FIELD_UPDATE.md
+
+# SQL files (run in Supabase, don't commit)
+*.sql
+!schema.sql
+
+# Edge Functions (deploy separately)
+WELCOME_EMAIL_EDGE_FUNCTION.ts
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
