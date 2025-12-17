@@ -54,8 +54,11 @@ WELCOME_EMAIL_GUIDE.md
 YEAR_FIELD_UPDATE.md
 
 # SQL files (run in Supabase, don't commit)
-*.sql
+# *.sql
 !schema.sql
+!FIX_*.sql
+!QUICK_FIX_*.sql
+!SYNC_USERS.sql
 
 # Edge Functions (deploy separately)
 WELCOME_EMAIL_EDGE_FUNCTION.ts

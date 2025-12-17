@@ -38,9 +38,39 @@ export function ContactUsPage({
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError("");
+    
+    const form = e.target as HTMLFormElement;
+    const formDataObj = new FormData(form);
+    
+    try {
+      const response = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(formDataObj as any).toString(),
+      });
+      
+      if (response.ok) {
+        setSubmitted(true);
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        throw new Error("Form submission failed");
+      }
+    } catch (err) {
+      setError("Failed to send message. Please try again or email us directly.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -200,24 +230,19 @@ export function ContactUsPage({
                   method="POST"
                   data-netlify="true"
                   netlify-honeypot="bot-field"
-                  action="/contact-success"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const form = e.target as HTMLFormElement;
-                    
-                    fetch("/", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                      body: new URLSearchParams(new FormData(form) as any).toString(),
-                    })
-                      .then(() => setSubmitted(true))
-                      .catch((error) => alert(error));
-                  }}
+                  onSubmit={handleSubmit}
                   className="space-y-5"
                 >
                   {/* Hidden fields for Netlify */}
                   <input type="hidden" name="form-name" value="contact" />
                   <input type="hidden" name="bot-field" />
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
 
                   {/* Name */}
                   <div>
@@ -286,8 +311,9 @@ export function ContactUsPage({
                   {/* Submit Button */}
                   <ButtonColorful
                     type="submit"
-                    label="Send Message"
+                    label={submitting ? "Sending..." : "Send Message"}
                     className="w-full"
+                    disabled={submitting}
                   />
                 </form>
               )}
