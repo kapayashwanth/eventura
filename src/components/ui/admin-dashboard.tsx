@@ -15,9 +15,10 @@ import { supabase, Event } from "@/lib/supabase";
 import { EventForm } from "./event-form";
 import { EventsTable } from "./events-table";
 import { UsersTable } from "./users-table";
+import { EventApplicationsAdmin } from "./event-applications-admin";
 
 export function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"overview" | "events" | "create" | "users">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "events" | "create" | "users" | "applications">("overview");
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
@@ -144,7 +145,8 @@ export function AdminDashboard() {
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
               { id: "events", label: "All Events", icon: Calendar },
-              { id: "users", label: "Registered Users", icon: Users },
+              { id: "applications", label: "Applications", icon: Users },
+              { id: "users", label: "Registered Users", icon: User },
               { id: "create", label: "Create Event", icon: Plus },
             ].map((tab) => (
               <button
@@ -259,6 +261,15 @@ export function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
           >
             <UsersTable />
+          </motion.div>
+        )}
+
+        {activeTab === "applications" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <EventApplicationsAdmin />
           </motion.div>
         )}
 

@@ -15,6 +15,7 @@ export interface Event {
   description: string;
   event_date: string;
   registration_link?: string;
+  application_deadline?: string;
   banner_image?: string;
   category: 'hackathon' | 'workshop' | 'tech-talk' | 'seminar' | 'conference' | 'competition' | 'webinar' | 'general';
   status: 'past' | 'upcoming';

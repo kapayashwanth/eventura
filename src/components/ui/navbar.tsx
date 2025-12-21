@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Calendar } from "lucide-react";
 
 interface NavbarProps {
   onLoginClick?: () => void;
@@ -13,6 +13,7 @@ interface NavbarProps {
   onContactClick?: () => void;
   onHomeClick?: () => void;
   onProfileClick?: () => void;
+  onRegisteredEventsClick?: () => void;
   isAuthenticated?: boolean;
   onLogout?: () => void;
   userName?: string;
@@ -27,6 +28,7 @@ export function Navbar({
   onContactClick,
   onHomeClick,
   onProfileClick,
+  onRegisteredEventsClick,
   isAuthenticated, 
   onLogout, 
   userName 
@@ -134,6 +136,16 @@ export function Navbar({
                     >
                       <User className="w-4 h-4" />
                       My Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        onRegisteredEventsClick?.();
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-white/80 hover:bg-white/10 transition-colors flex items-center gap-2"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Registered Events
                     </button>
                     <button
                       onClick={() => {

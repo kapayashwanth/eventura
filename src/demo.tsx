@@ -13,11 +13,12 @@ import { UpcomingEventsPage } from "@/components/ui/upcoming-events-page";
 import { ContactUsPage } from "@/components/ui/contact-us-page";
 import { AccessDenied } from "@/components/ui/access-denied";
 import { ProfilePage } from "@/components/ui/profile-page";
+import { RegisteredEventsPage } from "@/components/ui/registered-events-page";
 import { Footer } from "@/components/ui/footer";
 import { supabase } from "@/lib/supabase";
 
 function DemoHeroGeometric() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'signup' | 'admin' | 'about' | 'past-events' | 'upcoming-events' | 'contact' | 'profile'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'signup' | 'admin' | 'about' | 'past-events' | 'upcoming-events' | 'contact' | 'profile' | 'registered-events'>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState<string>("");
@@ -221,6 +222,8 @@ function DemoHeroGeometric() {
       onPastEventsClick={() => setCurrentPage('past-events')}
       onUpcomingEventsClick={() => setCurrentPage('upcoming-events')}
       onContactClick={() => setCurrentPage('contact')}
+      onProfileClick={() => setCurrentPage('profile')}
+      onRegisteredEventsClick={() => setCurrentPage('registered-events')}
       isAuthenticated={isAuthenticated}
       onLogout={handleLogout}
       userName={userName}
@@ -237,6 +240,8 @@ function DemoHeroGeometric() {
       onPastEventsClick={() => setCurrentPage('past-events')}
       onUpcomingEventsClick={() => setCurrentPage('upcoming-events')}
       onContactClick={() => setCurrentPage('contact')}
+      onProfileClick={() => setCurrentPage('profile')}
+      onRegisteredEventsClick={() => setCurrentPage('registered-events')}
       isAuthenticated={isAuthenticated}
       onLogout={handleLogout}
       userName={userName}
@@ -253,6 +258,8 @@ function DemoHeroGeometric() {
       onPastEventsClick={() => setCurrentPage('past-events')}
       onUpcomingEventsClick={() => setCurrentPage('upcoming-events')}
       onContactClick={() => setCurrentPage('contact')}
+      onProfileClick={() => setCurrentPage('profile')}
+      onRegisteredEventsClick={() => setCurrentPage('registered-events')}
       isAuthenticated={isAuthenticated}
       onLogout={handleLogout}
       userName={userName}
@@ -269,6 +276,8 @@ function DemoHeroGeometric() {
       onPastEventsClick={() => setCurrentPage('past-events')}
       onUpcomingEventsClick={() => setCurrentPage('upcoming-events')}
       onContactClick={() => setCurrentPage('contact')}
+      onProfileClick={() => setCurrentPage('profile')}
+      onRegisteredEventsClick={() => setCurrentPage('registered-events')}
       isAuthenticated={isAuthenticated}
       onLogout={handleLogout}
       userName={userName}
@@ -295,11 +304,26 @@ function DemoHeroGeometric() {
       onContactClick={() => handleNavigation('contact')}
       onHomeClick={() => handleNavigation('home')}
       onProfileClick={() => handleNavigation('profile')}
+      onRegisteredEventsClick={() => handleNavigation('registered-events')}
       isAuthenticated={isAuthenticated}
       onLogout={handleLogout}
       userName={userName}
       onProfileUpdate={() => checkAuth()}
     />;
+  }
+
+  // Registered Events page
+  if (currentPage === 'registered-events') {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      setTimeout(() => setCurrentPage('login'), 0);
+      return (
+        <div className="min-h-screen w-full bg-[#030303] flex items-center justify-center">
+          <div className="text-white/50">Redirecting to login...</div>
+        </div>
+      );
+    }
+    return <RegisteredEventsPage onClose={() => setCurrentPage('home')} />;
   }
 
   // Admin section (login or dashboard based on auth and admin role)
@@ -336,6 +360,7 @@ function DemoHeroGeometric() {
         onContactClick={() => setCurrentPage('contact')}
         onHomeClick={() => setCurrentPage('home')}
         onProfileClick={() => setCurrentPage('profile')}
+        onRegisteredEventsClick={() => setCurrentPage('registered-events')}
         isAuthenticated={isAuthenticated}
         onLogout={handleLogout}
         userName={userName}

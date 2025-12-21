@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Save, X, Calendar, MapPin, Link, Tag, Users, Upload, Image as ImageIcon } from "lucide-react";
+import { Save, X, Calendar, Clock, MapPin, Link, Tag, Users, Upload, Image as ImageIcon } from "lucide-react";
 import { supabase, Event } from "@/lib/supabase";
 
 interface EventFormProps {
@@ -16,6 +16,7 @@ export function EventForm({ event, onSuccess, onCancel }: EventFormProps) {
     title: "",
     description: "",
     event_date: "",
+    application_deadline: "",
     registration_link: "",
     location: "",
     organizer: "",
@@ -35,6 +36,7 @@ export function EventForm({ event, onSuccess, onCancel }: EventFormProps) {
         title: event.title || "",
         description: event.description || "",
         event_date: event.event_date ? event.event_date.slice(0, 16) : "",
+        application_deadline: event.application_deadline ? event.application_deadline.slice(0, 16) : "",
         registration_link: event.registration_link || "",
         location: event.location || "",
         organizer: event.organizer || "",
@@ -104,15 +106,25 @@ export function EventForm({ event, onSuccess, onCancel }: EventFormProps) {
         }
       }
 
-      // Calculate status based on event date
-      const eventDate = new Date(formData.event_date);
+      // Calculate status based on application deadline (if set) or event date
       const now = new Date();
-      const status = eventDate < now ? 'past' : 'upcoming';
+      let status: 'past' | 'upcoming';
+      
+      if (formData.application_deadline) {
+        // If deadline is set, use deadline to determine status
+        const deadline = new Date(formData.application_deadline);
+        status = deadline < now ? 'past' : 'upcoming';
+      } else {
+        // Fallback to event date if no deadline set
+        const eventDate = new Date(formData.event_date);
+        status = eventDate < now ? 'past' : 'upcoming';
+      }
 
       const eventData = {
         title: formData.title,
         description: formData.description,
         event_date: formData.event_date,
+        application_deadline: formData.application_deadline || null,
         registration_link: formData.registration_link || null,
         location: formData.location || null,
         organizer: formData.organizer || null,
@@ -211,25 +223,40 @@ export function EventForm({ event, onSuccess, onCancel }: EventFormProps) {
 
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-white/70 mb-2">
-                <Tag className="w-4 h-4" />
-                Category *
+                <Clock className="w-4 h-4" />
+                Application Deadline
               </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value as Event["category"] })}
-                required
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all [&>option]:bg-gray-900 [&>option]:text-white"
-              >
-                <option value="general">General</option>
-                <option value="hackathon">Hackathon</option>
-                <option value="workshop">Workshop</option>
-                <option value="tech-talk">Tech Talk</option>
-                <option value="seminar">Seminar</option>
-                <option value="conference">Conference</option>
-                <option value="competition">Competition</option>
-                <option value="webinar">Webinar</option>
-              </select>
+              <input
+                type="datetime-local"
+                value={formData.application_deadline}
+                onChange={(e) => setFormData({ ...formData, application_deadline: e.target.value })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+              />
+              <p className="text-xs text-white/40 mt-1">When applications close (optional)</p>
             </div>
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-white/70 mb-2">
+              <Tag className="w-4 h-4" />
+              Category *
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value as Event["category"] })}
+              required
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all [&>option]:bg-gray-900 [&>option]:text-white"
+            >
+              <option value="general">General</option>
+              <option value="hackathon">Hackathon</option>
+              <option value="workshop">Workshop</option>
+              <option value="tech-talk">Tech Talk</option>
+              <option value="seminar">Seminar</option>
+              <option value="conference">Conference</option>
+              <option value="competition">Competition</option>
+              <option value="webinar">Webinar</option>
+            </select>
           </div>
 
           {/* Location and Organizer */}

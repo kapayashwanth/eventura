@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, MapPin, User, Users, ExternalLink } from "lucide-react";
 import { ButtonColorful } from "./button-colorful";
+import { EventRegistrationButton } from "./event-registration-button";
 
 interface Event {
   id: string;
@@ -10,11 +11,13 @@ interface Event {
   description: string;
   event_date: string;
   registration_link?: string;
+  application_deadline?: string;
   banner_image?: string;
   category: string;
   location?: string;
   organizer?: string;
   max_participants?: number;
+  status?: string;
 }
 
 interface EventDetailsModalProps {
@@ -100,6 +103,31 @@ export function EventDetailsModal({ event, isOpen, onClose }: EventDetailsModalP
                   </div>
                 )}
 
+                {event.application_deadline && (
+                  <div className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-yellow-500/20">
+                    <div className="p-2 bg-yellow-500/20 rounded-lg">
+                      <Calendar className="w-5 h-5 text-yellow-300" />
+                    </div>
+                    <div>
+                      <p className="text-white/50 text-sm">Application Deadline</p>
+                      <p className="text-white font-medium">
+                        {new Date(event.application_deadline).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                      <p className="text-yellow-300/90 text-sm">
+                        {new Date(event.application_deadline).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {event.location && (
                   <div className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
                     <div className="p-2 bg-rose-500/20 rounded-lg">
@@ -147,21 +175,27 @@ export function EventDetailsModal({ event, isOpen, onClose }: EventDetailsModalP
                 </div>
               </div>
 
-              {/* Register Button */}
-              {event.registration_link && (
-                <div className="flex gap-4">
-                  <ButtonColorful
-                    label="Register Now"
-                    onClick={() => window.open(event.registration_link, '_blank')}
-                    className="flex-1"
+              {/* Apply Button */}
+              {event.status !== 'past' && (
+                <div className="space-y-3">
+                  <EventRegistrationButton
+                    eventId={event.id}
+                    eventTitle={event.title}
+                    eventDate={event.event_date}
+                    applicationDeadline={event.application_deadline}
+                    variant="primary"
                   />
-                  <button
-                    onClick={() => window.open(event.registration_link, '_blank')}
-                    className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center gap-2 text-white"
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                    Open Link
-                  </button>
+                  
+                  {/* External Link Option (if available) */}
+                  {event.registration_link && (
+                    <button
+                      onClick={() => window.open(event.registration_link, '_blank')}
+                      className="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-white text-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Or Register via External Link
+                    </button>
+                  )}
                 </div>
               )}
             </div>

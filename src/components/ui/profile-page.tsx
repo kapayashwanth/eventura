@@ -27,6 +27,7 @@ interface ProfilePageProps {
   onContactClick?: () => void;
   onHomeClick?: () => void;
   onProfileClick?: () => void;
+  onRegisteredEventsClick?: () => void;
   isAuthenticated?: boolean;
   onLogout?: () => void;
   userName?: string;
@@ -42,6 +43,7 @@ export function ProfilePage({
   onContactClick,
   onHomeClick,
   onProfileClick,
+  onRegisteredEventsClick,
   isAuthenticated,
   onLogout,
   userName,
@@ -295,6 +297,7 @@ export function ProfilePage({
         onContactClick={onContactClick}
         onHomeClick={onHomeClick}
         onProfileClick={onProfileClick}
+        onRegisteredEventsClick={onRegisteredEventsClick}
         isAuthenticated={isAuthenticated}
         onLogout={onLogout}
         userName={userName}

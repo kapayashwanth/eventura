@@ -14,6 +14,8 @@ interface ContactUsPageProps {
   onPastEventsClick?: () => void;
   onUpcomingEventsClick?: () => void;
   onContactClick?: () => void;
+  onProfileClick?: () => void;
+  onRegisteredEventsClick?: () => void;
   isAuthenticated?: boolean;
   onLogout?: () => void;
   userName?: string;
@@ -27,6 +29,8 @@ export function ContactUsPage({
   onPastEventsClick,
   onUpcomingEventsClick,
   onContactClick,
+  onProfileClick,
+  onRegisteredEventsClick,
   isAuthenticated,
   onLogout,
   userName
@@ -83,6 +87,8 @@ export function ContactUsPage({
         onUpcomingEventsClick={onUpcomingEventsClick}
         onContactClick={onContactClick}
         onHomeClick={onBack}
+        onProfileClick={onProfileClick}
+        onRegisteredEventsClick={onRegisteredEventsClick}
         isAuthenticated={isAuthenticated}
         onLogout={onLogout}
         userName={userName}

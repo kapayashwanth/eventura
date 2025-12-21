@@ -7,6 +7,7 @@ import { Navbar } from "./navbar";
 import { Footer } from "./footer";
 import { ButtonColorful } from "./button-colorful";
 import { EventDetailsModal } from "./event-details-modal";
+import { EventRegistrationButton } from "./event-registration-button";
 import { Eye } from "lucide-react";
 
 interface Event {
@@ -15,11 +16,13 @@ interface Event {
   description: string;
   event_date: string;
   registration_link?: string;
+  application_deadline?: string;
   banner_image?: string;
   category: string;
   location?: string;
   organizer?: string;
   max_participants?: number;
+  status?: string;
 }
 
 interface UpcomingEventsPageProps {
@@ -30,6 +33,8 @@ interface UpcomingEventsPageProps {
   onPastEventsClick?: () => void;
   onUpcomingEventsClick?: () => void;
   onContactClick?: () => void;
+  onProfileClick?: () => void;
+  onRegisteredEventsClick?: () => void;
   isAuthenticated?: boolean;
   onLogout?: () => void;
   userName?: string;
@@ -43,6 +48,8 @@ export function UpcomingEventsPage({
   onPastEventsClick,
   onUpcomingEventsClick,
   onContactClick,
+  onProfileClick,
+  onRegisteredEventsClick,
   isAuthenticated,
   onLogout,
   userName
@@ -96,6 +103,8 @@ export function UpcomingEventsPage({
         onUpcomingEventsClick={onUpcomingEventsClick}
         onContactClick={onContactClick}
         onHomeClick={onBack}
+        onProfileClick={onProfileClick}
+        onRegisteredEventsClick={onRegisteredEventsClick}
         isAuthenticated={isAuthenticated}
         onLogout={onLogout}
         userName={userName}
@@ -253,23 +262,24 @@ export function UpcomingEventsPage({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-auto">
+                  <div className="flex flex-col gap-2 sm:gap-3 mt-auto">
                     <button
                       onClick={() => handleViewDetails(event)}
-                      className="flex-1 group/view relative px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500/20 to-rose-500/20 border border-indigo-300/30 hover:border-rose-300/50 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden"
+                      className="w-full group/view relative px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500/20 to-rose-500/20 border border-indigo-300/30 hover:border-rose-300/50 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-rose-500/10 opacity-0 group-hover/view:opacity-100 transition-opacity duration-300" />
                       <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-300 group-hover/view:text-rose-300 transition-colors relative z-10" />
                       <span className="text-xs sm:text-sm font-medium text-white relative z-10">View Details</span>
                     </button>
                     
-                    {event.registration_link && (
-                      <ButtonColorful
-                        label="Register"
-                        onClick={() => window.open(event.registration_link, '_blank')}
-                        className="flex-1 text-xs sm:text-sm py-2 sm:py-2.5"
-                      />
-                    )}
+                    <EventRegistrationButton
+                      eventId={event.id}
+                      eventTitle={event.title}
+                      eventDate={event.event_date}
+                      applicationDeadline={event.application_deadline}
+                      variant="primary"
+                      className="text-xs sm:text-sm"
+                    />
                   </div>
                 </div>
               </motion.div>
