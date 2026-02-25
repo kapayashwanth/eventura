@@ -252,13 +252,21 @@ export function EventForm({ event, onClose, onSaved }: EventFormProps) {
               <label className="flex items-center gap-2 text-white/60 text-sm mb-2">
                 <Tag className="w-4 h-4" />Category
               </label>
-              <input
-                type="text"
+              <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                placeholder="e.g., Workshop, Seminar"
-              />
+              >
+                <option value="" className="bg-gray-800">Select category</option>
+                <option value="hackathon" className="bg-gray-800">Hackathon</option>
+                <option value="workshop" className="bg-gray-800">Workshop</option>
+                <option value="tech-talk" className="bg-gray-800">Tech Talk</option>
+                <option value="seminar" className="bg-gray-800">Seminar</option>
+                <option value="conference" className="bg-gray-800">Conference</option>
+                <option value="competition" className="bg-gray-800">Competition</option>
+                <option value="webinar" className="bg-gray-800">Webinar</option>
+                <option value="general" className="bg-gray-800">General</option>
+              </select>
             </div>
           </div>
 
