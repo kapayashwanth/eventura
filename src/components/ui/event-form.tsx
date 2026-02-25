@@ -84,11 +84,17 @@ export function EventForm({ event, onClose, onSaved }: EventFormProps) {
         headers: { "Content-Type": file.type },
         body: file,
       });
-      const { storageId } = await result.json();
-      setUploadedStorageId(storageId);
+      if (!result.ok) {
+        throw new Error(`Upload failed with status ${result.status}`);
+      }
+      const json = await result.json();
+      if (!json.storageId) {
+        throw new Error("No storageId returned from upload");
+      }
+      setUploadedStorageId(json.storageId);
     } catch (err: any) {
       console.error("Upload failed:", err);
-      setError("Failed to upload image. Please try again.");
+      setError(err.message || "Failed to upload image. Please try again.");
     } finally {
       setUploading(false);
     }
