@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LogoMarquee } from "@/components/ui/logo-marquee";
 
 function ElegantShape({
   className,
@@ -162,6 +163,11 @@ function HeroGeometric({
       </div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/80 pointer-events-none" />
+
+      {/* Logo marquee at bottom of hero */}
+      <div className="absolute bottom-8 left-0 right-0 z-20">
+        <LogoMarquee />
+      </div>
     </div>
   );
 }
