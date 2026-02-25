@@ -118,14 +118,12 @@ export function EventsSection({ onViewAllUpcoming, onViewAllPast, onEventClick, 
             <p className="text-white/50 text-sm md:text-base">Don't miss out on these events</p>
           </div>
           <div className="flex justify-end mb-6">
-            {(upcomingEvents || []).length > 3 && (
-              <button
-                onClick={onViewAllUpcoming}
-                className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-rose-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg shadow-indigo-500/25"
-              >
-                View All <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
+            <button
+              onClick={onViewAllUpcoming}
+              className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-rose-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg shadow-indigo-500/25"
+            >
+              View All <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
 
           {upcomingEvents === undefined ? (
@@ -153,14 +151,12 @@ export function EventsSection({ onViewAllUpcoming, onViewAllPast, onEventClick, 
             <p className="text-white/50 text-sm md:text-base">Events that have already taken place</p>
           </div>
           <div className="flex justify-end mb-6">
-            {(pastEvents || []).length > 3 && (
-              <button
-                onClick={onViewAllPast}
-                className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-rose-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg shadow-indigo-500/25"
-              >
-                View All <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
+            <button
+              onClick={onViewAllPast}
+              className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-rose-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg shadow-indigo-500/25"
+            >
+              View All <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
 
           {pastEvents === undefined ? (
