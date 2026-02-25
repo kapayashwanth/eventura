@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Reminder - Eventura</title>
+</head>
+
+<body
+    style="margin: 0; padding: 32px 16px; background: #111111; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <div
+        style="max-width: 560px; margin: 0 auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #2a2a2a;">
+
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #6366f1, #ec4899); padding: 36px 32px; text-align: center;">
+            <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: 1px;">EVENTURA</h1>
+            <p style="margin: 10px 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Event Reminder</p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 36px 32px;">
+            <p style="color: #b0b0b0; font-size: 15px; margin: 0 0 8px;">Hi {{userName}},</p>
+            <h2 style="color: #ffffff; font-size: 20px; margin: 0 0 20px; font-weight: 600;">{{eventTitle}}</h2>
+
+            <div
+                style="background: #222222; border-radius: 8px; padding: 20px; margin: 0 0 24px; border-left: 3px solid #6366f1;">
+                <table style="border-collapse: collapse; width: 100%;">
+                    <tr>
+                        <td style="padding: 6px 0; color: #b0b0b0; font-size: 14px;"><strong
+                                style="color: #e0e0e0;">Date:</strong> {{eventDate}}</td>
+                    </tr>
+                    <!-- {{eventTime}} -->
+                    <tr>
+                        <td style="padding: 6px 0; color: #b0b0b0; font-size: 14px;"><strong
+                                style="color: #e0e0e0;">Time:</strong> {{eventTime}}</td>
+                    </tr>
+                    <!-- {{eventLocation}} -->
+                    <tr>
+                        <td style="padding: 6px 0; color: #b0b0b0; font-size: 14px;"><strong
+                                style="color: #e0e0e0;">Location:</strong> {{eventLocation}}</td>
+                    </tr>
+                    <!-- {{eventCategory}} -->
+                    <tr>
+                        <td style="padding: 6px 0; color: #b0b0b0; font-size: 14px;"><strong
+                                style="color: #e0e0e0;">Category:</strong> {{eventCategory}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- {{eventDescription}} -->
+            <p style="color: #b0b0b0; font-size: 14px; line-height: 1.6; margin: 0 0 20px;">{{eventDescription}}</p>
+
+            <!-- {{applicationDeadline}} -->
+            <p style="color: #ec4899; font-weight: 600; font-size: 14px; margin: 0 0 28px;">Application Deadline:
+                {{applicationDeadline}}</p>
+
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 0 0 28px;">
+                <a href="https://eventura.live"
+                    style="display: inline-block; padding: 14px 36px; background: linear-gradient(135deg, #6366f1, #ec4899); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">View
+                    Details</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 24px 32px; background: #141414; border-top: 1px solid #2a2a2a; text-align: center;">
+            <p style="color: #666666; font-size: 12px; margin: 0 0 8px; line-height: 1.6;">
+                Eventura — Campus Event Management
+            </p>
+            <p style="margin: 0 0 8px;">
+                <a href="mailto:admin@kapayashwanth.me"
+                    style="color: #6366f1; font-size: 12px; text-decoration: none;">admin@kapayashwanth.me</a>
+                <span style="color: #444444; font-size: 12px;"> &middot; </span>
+                <a href="mailto:team@eventura.live"
+                    style="color: #6366f1; font-size: 12px; text-decoration: none;">team@eventura.live</a>
+            </p>
+            <p style="color: #555555; font-size: 11px; margin: 0;">
+                You received this email because you set a reminder on Eventura.
+            </p>
+        </div>
+
+    </div>
+</body>
+
+</html>

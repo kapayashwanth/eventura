@@ -264,6 +264,7 @@ export function AboutUs() {
               <ButtonColorful
                 label="Get In Touch"
                 className="px-6 md:px-8"
+                onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
               />
             </div>
           </div>

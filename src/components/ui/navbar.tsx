@@ -14,7 +14,9 @@ interface NavbarProps {
   onHomeClick?: () => void;
   onProfileClick?: () => void;
   onRegisteredEventsClick?: () => void;
+  onAdminClick?: () => void;
   isAuthenticated?: boolean;
+  isAdmin?: boolean;
   onLogout?: () => void;
   userName?: string;
 }
@@ -29,7 +31,9 @@ export function Navbar({
   onHomeClick,
   onProfileClick,
   onRegisteredEventsClick,
+  onAdminClick,
   isAuthenticated, 
+  isAdmin,
   onLogout, 
   userName 
 }: NavbarProps) {
@@ -39,10 +43,11 @@ export function Navbar({
 
   const navItems = [
     { name: "Home", href: "#home", onClick: onHomeClick },
-    { name: "About us", href: "#about", onClick: onAboutClick },
+    { name: "About", href: "#about", onClick: onAboutClick },
     { name: "Past Events", href: "#past-events", onClick: onPastEventsClick },
     { name: "Upcoming Events", href: "#upcoming-events", onClick: onUpcomingEventsClick },
-    { name: "Contact Us", href: "#contact", onClick: onContactClick },
+    { name: "Contact", href: "#contact", onClick: onContactClick },
+    ...(isAuthenticated && isAdmin ? [{ name: "Admin", href: "#admin", onClick: onAdminClick }] : []),
   ];
 
   const handleNavClick = (onClick?: () => void) => {
@@ -61,11 +66,17 @@ export function Navbar({
             transition={{ duration: 0.6 }}
             className="flex-shrink-0"
           >
-            <button onClick={() => handleNavClick(onHomeClick)} className="hover:opacity-80 transition-opacity">
+            <button onClick={() => handleNavClick(onHomeClick)} className="hover:opacity-80 transition-opacity flex items-center gap-3">
               <img 
                 src="/logo.svg" 
                 alt="Amrita Vishwa Vidyapeetham" 
-                className="h-8 sm:h-10 w-auto object-contain"
+                className="h-7 sm:h-9 w-auto object-contain"
+              />
+              <div className="h-6 sm:h-8 w-px bg-white/30 -mr-4" />
+              <img 
+                src="/logo2.png" 
+                alt="Eventura" 
+                className="h-10 sm:h-12 w-auto object-contain scale-[4] origin-left -ml-3"
               />
             </button>
           </motion.div>
@@ -103,7 +114,7 @@ export function Navbar({
               <div className="relative">
                 <button 
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="px-6 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
+                  className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-rose-500 text-white rounded-full text-sm font-medium hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
                   Hello, {userName || 'User'}
                   <svg 
@@ -164,13 +175,13 @@ export function Navbar({
               <>
                 <button 
                   onClick={onLoginClick}
-                  className="px-6 py-2 text-sm font-medium transition-all duration-300 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80 hover:from-white hover:to-white"
+                  className="px-6 py-2 text-sm font-medium transition-all duration-300 text-white hover:text-white/80 border border-white/20 rounded-full hover:border-white/40"
                 >
                   Login
                 </button>
                 <button 
                   onClick={onSignupClick}
-                  className="px-6 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-rose-500 text-white rounded-full text-sm font-medium hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   Signup
                 </button>

@@ -1,221 +1,200 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import { Calendar, MapPin, Clock, X } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-
-interface RegisteredEvent {
-  id: string;
-  event_id: string;
-  applied_at: string;
-  reminder_sent: boolean;
-  events: {
-    title: string;
-    description: string;
-    event_date: string;
-    application_deadline: string;
-    location: string;
-    category: string;
-    banner_image: string;
-  };
-}
+import { Calendar, MapPin, Clock, Trash2, Bell, BellRing } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Navbar } from "./navbar";
+import { Footer } from "./footer";
 
 interface RegisteredEventsPageProps {
-  onClose: () => void;
+  onLoginClick?: () => void;
+  onSignupClick?: () => void;
+  onAboutClick?: () => void;
+  onPastEventsClick?: () => void;
+  onUpcomingEventsClick?: () => void;
+  onContactClick?: () => void;
+  onHomeClick?: () => void;
+  onProfileClick?: () => void;
+  onRegisteredEventsClick?: () => void;
+  onAdminClick?: () => void;
+  isAuthenticated?: boolean;
+  isAdmin?: boolean;
+  onLogout?: () => void;
+  userName?: string;
 }
 
-export function RegisteredEventsPage({ onClose }: RegisteredEventsPageProps) {
-  const [registeredEvents, setRegisteredEvents] = useState<RegisteredEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+export function RegisteredEventsPage(props: RegisteredEventsPageProps) {
+  const { user } = useAuth();
 
-  useEffect(() => {
-    fetchRegisteredEvents();
-  }, []);
+  const applications = useQuery(
+    api.eventApplications.getByUser,
+    user ? { user_id: user.uid } : "skip"
+  );
+  const toggleApplication = useMutation(api.eventApplications.toggle);
 
-  const fetchRegisteredEvents = async () => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
+  const handleWithdraw = async (eventId: string) => {
+    if (!user) return;
+    if (!confirm("Are you sure you want to withdraw this application?")) return;
     try {
-      setLoading(true);
-      setError("");
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data, error: fetchError } = await supabase
-        .from('event_applications')
-        .select(`
-          id,
-          event_id,
-          applied_at,
-          reminder_sent,
-          events (
-            title,
-            description,
-            event_date,
-            application_deadline,
-            location,
-            category,
-            banner_image
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('is_applied', true)
-        .order('applied_at', { ascending: false });
-
-      if (fetchError) throw fetchError;
-
-      setRegisteredEvents(data || []);
-    } catch (err: any) {
-      console.error("Error fetching registered events:", err);
-      setError(err.message || "Failed to load registered events");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRemoveApplication = async (eventId: string) => {
-    if (!supabase) return;
-
-    if (!confirm("Are you sure you want to remove your application?")) return;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { error: toggleError } = await supabase.rpc('toggle_event_application', {
-        p_event_id: eventId
+      await toggleApplication({
+        user_id: user.uid,
+        event_id: eventId as any,
       });
-
-      if (toggleError) throw toggleError;
-
-      // Refresh the list
-      fetchRegisteredEvents();
     } catch (err: any) {
-      console.error("Error removing application:", err);
-      alert(err.message || "Failed to remove application");
+      console.error("Error withdrawing application:", err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#030303] py-12 px-4">
-      <div className="container mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <motion.h1 
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+      <Navbar
+        onLoginClick={props.onLoginClick}
+        onSignupClick={props.onSignupClick}
+        onAboutClick={props.onAboutClick}
+        onPastEventsClick={props.onPastEventsClick}
+        onUpcomingEventsClick={props.onUpcomingEventsClick}
+        onContactClick={props.onContactClick}
+        onHomeClick={props.onHomeClick}
+        onProfileClick={props.onProfileClick}
+        onRegisteredEventsClick={props.onRegisteredEventsClick}
+        onAdminClick={props.onAdminClick}
+        isAuthenticated={props.isAuthenticated}
+        isAdmin={props.isAdmin}
+        onLogout={props.onLogout}
+        userName={props.userName}
+      />
+
+      <div className="flex-grow py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60"
+            transition={{ duration: 0.6 }}
+            className="text-center mb-8 sm:mb-12"
           >
-            My Registered Events
-          </motion.h1>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onClose}
-            className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
-          >
-            <X className="w-6 h-6 text-white" />
-          </motion.button>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            <p className="text-white/60 mt-4">Loading your registered events...</p>
-          </div>
-        ) : error ? (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
-            <p className="text-red-400">{error}</p>
-          </div>
-        ) : registeredEvents.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-12 text-center"
-          >
-            <Calendar className="w-16 h-16 text-white/30 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No Registered Events</h3>
-            <p className="text-white/60">You haven't registered for any events yet.</p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+              My Registered Events
+            </h1>
+            <p className="text-white/60 text-sm sm:text-base">
+              Events you have applied to and your active reminders
+            </p>
           </motion.div>
-        ) : (
-          <div className="grid gap-6">
-            {registeredEvents.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 transition-all"
+
+          {applications === undefined ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-white/60 text-lg">Loading...</div>
+            </div>
+          ) : !applications || applications.length === 0 ? (
+            <div className="text-center py-20">
+              <Calendar className="w-16 h-16 text-white/20 mx-auto mb-6" />
+              <p className="text-white/40 text-xl">No registered events yet</p>
+              <p className="text-white/30 text-sm mt-2">
+                Browse upcoming events and apply to get started
+              </p>
+              <button
+                onClick={props.onUpcomingEventsClick}
+                className="mt-6 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-colors"
               >
-                <div className="md:flex">
-                  {/* Event Image */}
-                  <div className="md:w-1/3 h-48 md:h-auto">
-                    <img 
-                      src={item.events.banner_image || "/placeholder-event.jpg"} 
-                      alt={item.events.title}
-                      className="w-full h-full object-cover"
-                    />
+                Browse Events
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:gap-6">
+              {applications.map((app: any, index: number) => (
+                <motion.div
+                  key={app._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all"
+                >
+                  <div className="flex flex-col md:flex-row">
+                    {app.events?.banner_image && (
+                      <div className="md:w-48 h-32 md:h-auto">
+                        <img
+                          src={app.events.banner_image}
+                          alt={app.events.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <h3 className="text-white font-semibold text-lg">
+                            {app.events?.title || "Event"}
+                          </h3>
+                          {app.events?.description && (
+                            <p className="text-white/50 text-sm mt-1 line-clamp-2">
+                              {app.events.description}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-4 mt-3">
+                            {app.events?.event_date && (
+                              <div className="flex items-center gap-1 text-white/50 text-sm">
+                                <Calendar className="w-4 h-4" />
+                                {new Date(app.events.event_date).toLocaleDateString()}
+                              </div>
+                            )}
+                            {app.events?.event_time && (
+                              <div className="flex items-center gap-1 text-white/50 text-sm">
+                                <Clock className="w-4 h-4" />
+                                {app.events.event_time}
+                              </div>
+                            )}
+                            {app.events?.location && (
+                              <div className="flex items-center gap-1 text-white/50 text-sm">
+                                <MapPin className="w-4 h-4" />
+                                {app.events.location}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                              app.events?.status === "upcoming"
+                                ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+                            }`}
+                          >
+                            {app.events?.status || "unknown"}
+                          </span>
+                          {app.reminder_sent ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              <BellRing className="w-3 h-3" />
+                              Reminded
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                              <Bell className="w-3 h-3" />
+                              Reminder Set
+                            </span>
+                          )}
+                          <button
+                            onClick={() => app.event_id && handleWithdraw(app.event_id)}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 rounded-xl text-sm transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Withdraw
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-white/30 text-xs">
+                        Applied on{" "}
+                        {new Date(app._creationTime).toLocaleDateString()}
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Event Details */}
-                  <div className="flex-1 p-6">
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <div>
-                        <span className="px-3 py-1 bg-indigo-500/20 rounded-full text-xs text-indigo-300 mb-2 inline-block">
-                          {item.events.category}
-                        </span>
-                        <h3 className="text-2xl font-bold text-white mb-2">{item.events.title}</h3>
-                        <p className="text-white/60 text-sm line-clamp-2">{item.events.description}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-3 mb-4">
-                      <div className="flex items-center gap-2 text-white/60 text-sm">
-                        <Calendar className="w-4 h-4" />
-                        <span>Event: {new Date(item.events.event_date).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-white/60 text-sm">
-                        <Clock className="w-4 h-4" />
-                        <span>Deadline: {new Date(item.events.application_deadline).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-white/60 text-sm">
-                        <MapPin className="w-4 h-4" />
-                        <span>{item.events.location}</span>
-                      </div>
-                      <div className="text-white/60 text-sm">
-                        Applied: {new Date(item.applied_at).toLocaleDateString()}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 bg-green-500/20 rounded-full text-xs text-green-300">
-                        ✓ Registered
-                      </span>
-                      {item.reminder_sent && (
-                        <span className="px-3 py-1 bg-blue-500/20 rounded-full text-xs text-blue-300">
-                          ✓ Reminder Sent
-                        </span>
-                      )}
-                      <button
-                        onClick={() => handleRemoveApplication(item.event_id)}
-                        className="ml-auto px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors text-red-400 text-sm"
-                      >
-                        Remove Application
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+      <Footer />
     </div>
   );
 }

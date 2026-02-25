@@ -41,10 +41,10 @@ function ElegantShape({
     >
       <motion.div
         animate={{
-          y: [0, 15, 0],
+          y: [0, 10, 0],
         }}
         transition={{
-          duration: 12,
+          duration: 20,
           repeat: Number.POSITIVE_INFINITY,
           ease: "easeInOut",
         }}

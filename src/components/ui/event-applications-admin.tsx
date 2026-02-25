@@ -1,290 +1,178 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import { Calendar, Users, Mail, Phone, Download, Eye } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-
-interface EventWithApplications {
-  id: string;
-  title: string;
-  event_date: string;
-  application_deadline: string;
-  category: string;
-  location: string;
-  applications_count: number;
-}
-
-interface ApplicationDetails {
-  user_name: string;
-  user_email: string;
-  user_mobile: string;
-  user_department: string;
-  user_year: string;
-  applied_at: string;
-  reminder_sent: boolean;
-}
+import { useState } from "react";
+import { Calendar, Users, Search, Download, ChevronDown, ChevronUp, Mail, Phone, Building2, GraduationCap } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 export function EventApplicationsAdmin() {
-  const [events, setEvents] = useState<EventWithApplications[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
-  const [applications, setApplications] = useState<ApplicationDetails[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [expandedApp, setExpandedApp] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchEventsWithApplications();
-  }, []);
+  const events = useQuery(api.events.getAll);
+  const applications = useQuery(
+    api.eventApplications.getByEvent,
+    selectedEventId ? { event_id: selectedEventId as Id<"events"> } : "skip"
+  );
 
-  const fetchEventsWithApplications = async () => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
+  const filteredApplications = (applications || []).filter((app: any) => {
+    const q = search.toLowerCase();
+    return (
+      (app.user_profile?.full_name || "").toLowerCase().includes(q) ||
+      (app.user_profile?.email || "").toLowerCase().includes(q) ||
+      (app.user_profile?.department || "").toLowerCase().includes(q)
+    );
+  });
 
-    try {
-      setLoading(true);
+  const selectedEvent = (events || []).find((e: any) => e._id === selectedEventId);
 
-      // Get all events
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('*')
-        .order('event_date', { ascending: false });
-
-      if (eventsError) throw eventsError;
-
-      // Get application counts for each event
-      const eventsWithCounts = await Promise.all(
-        (eventsData || []).map(async (event) => {
-          const { count } = await supabase
-            .from('event_applications')
-            .select('*', { count: 'exact', head: true })
-            .eq('event_id', event.id)
-            .eq('is_applied', true);
-
-          return {
-            id: event.id,
-            title: event.title,
-            event_date: event.event_date,
-            application_deadline: event.application_deadline,
-            category: event.category,
-            location: event.location,
-            applications_count: count || 0
-          };
-        })
-      );
-
-      setEvents(eventsWithCounts);
-    } catch (err: any) {
-      console.error("Error fetching events:", err);
-      setError(err.message || "Failed to load events");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchApplicationsForEvent = async (eventId: string) => {
-    if (!supabase) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('event_applications')
-        .select(`
-          applied_at,
-          reminder_sent,
-          user_profiles:user_id (
-            full_name,
-            email,
-            mobile_number,
-            department,
-            year_of_study
-          )
-        `)
-        .eq('event_id', eventId)
-        .eq('is_applied', true)
-        .order('applied_at', { ascending: false });
-
-      if (error) throw error;
-
-      const applicationsData = (data || []).map((app: any) => ({
-        user_name: app.user_profiles?.full_name || 'Unknown',
-        user_email: app.user_profiles?.email || 'N/A',
-        user_mobile: app.user_profiles?.mobile_number || 'N/A',
-        user_department: app.user_profiles?.department || 'N/A',
-        user_year: app.user_profiles?.year_of_study || 'N/A',
-        applied_at: app.applied_at,
-        reminder_sent: app.reminder_sent
-      }));
-
-      setApplications(applicationsData);
-      setSelectedEvent(eventId);
-    } catch (err: any) {
-      console.error("Error fetching applications:", err);
-      alert("Failed to load applications");
-    }
-  };
-
-  const exportToCSV = (eventTitle: string) => {
-    if (applications.length === 0) return;
-
-    const headers = ['Name', 'Email', 'Mobile', 'Department', 'Year', 'Applied Date', 'Reminder Sent'];
-    const csvData = applications.map(app => [
-      app.user_name,
-      app.user_email,
-      app.user_mobile,
-      app.user_department,
-      app.user_year,
-      new Date(app.applied_at).toLocaleDateString(),
-      app.reminder_sent ? 'Yes' : 'No'
+  const handleExportCSV = () => {
+    if (!filteredApplications.length) return;
+    const headers = ["Name", "Email", "Mobile", "Department", "Year", "Applied Date"];
+    const rows = filteredApplications.map((app: any) => [
+      app.user_profile?.full_name || "",
+      app.user_profile?.email || "",
+      app.user_profile?.mobile_number || "",
+      app.user_profile?.department || "",
+      app.user_profile?.year_of_study || "",
+      new Date(app._creationTime).toLocaleDateString(),
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${eventTitle.replace(/[^a-z0-9]/gi, '_')}_applications_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+    const csvContent = [headers, ...rows].map((row: any) => row.map((cell: any) => `"${cell}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${selectedEvent?.title || "event"}_applications.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#030303] py-12 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-white text-center">Loading...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Event Applications</h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Users className="w-5 h-5 text-indigo-400" />
+          <h2 className="text-lg font-semibold text-white">Event Applications</h2>
+        </div>
       </div>
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400">
-          {error}
-        </div>
-      )}
+      {/* Event Selector */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+        <label className="text-white/60 text-sm mb-2 block">Select an event to view applications:</label>
+        <select
+          value={selectedEventId}
+          onChange={(e) => { setSelectedEventId(e.target.value); setSearch(""); }}
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+        >
+          <option value="" className="bg-gray-800">-- Select Event --</option>
+          {(events || []).map((event: any) => (
+            <option key={event._id} value={event._id} className="bg-gray-800">
+              {event.title} ({event.status})
+            </option>
+          ))}
+        </select>
+      </div>
 
-      {/* Events List */}
-      <div className="grid gap-4">
-        {events.map((event) => (
-          <motion.div
-            key={event.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-start gap-3 mb-3">
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-2">{event.title}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1 bg-indigo-500/20 rounded-full text-xs text-indigo-300">
-                        {event.category}
-                      </span>
-                      <span className="px-3 py-1 bg-green-500/20 rounded-full text-xs text-green-300 flex items-center gap-1">
-                        <Users className="w-3 h-3" />
-                        {event.applications_count} Applications
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-2 text-sm text-white/60">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>Event: {new Date(event.event_date).toLocaleDateString()}</span>
-                  </div>
-                  {event.application_deadline && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>Deadline: {new Date(event.application_deadline).toLocaleDateString()}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
+      {selectedEventId && (
+        <>
+          {/* Search and Export */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <input
+                type="text"
+                placeholder="Search applicants..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full sm:w-64 pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-white/40 text-sm">{filteredApplications.length} applicant(s)</span>
               <button
-                onClick={() => fetchApplicationsForEvent(event.id)}
-                className="px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-xl hover:bg-indigo-500/30 transition-colors flex items-center gap-2 text-white text-sm"
+                onClick={handleExportCSV}
+                disabled={!filteredApplications.length}
+                className="flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 text-green-300 rounded-xl text-sm transition-colors disabled:opacity-50"
               >
-                <Eye className="w-4 h-4" />
-                View Applications
+                <Download className="w-4 h-4" />
+                Export CSV
               </button>
             </div>
+          </div>
 
-            {/* Applications List */}
-            {selectedEvent === event.id && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mt-6 pt-6 border-t border-white/10"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-white">
-                    Applications ({applications.length})
-                  </h4>
-                  {applications.length > 0 && (
-                    <button
-                      onClick={() => exportToCSV(event.title)}
-                      className="px-3 py-2 bg-green-500/20 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-colors flex items-center gap-2 text-green-400 text-sm"
-                    >
-                      <Download className="w-4 h-4" />
-                      Export CSV
-                    </button>
-                  )}
-                </div>
-
-                {applications.length === 0 ? (
-                  <p className="text-white/50 text-center py-4">No applications yet</p>
-                ) : (
-                  <div className="space-y-3">
-                    {applications.map((app, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-white/5 border border-white/10 rounded-lg p-4"
-                      >
-                        <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <p className="text-white font-semibold mb-1">{app.user_name}</p>
-                            <div className="space-y-1 text-white/60">
-                              <div className="flex items-center gap-2">
-                                <Mail className="w-3 h-3" />
-                                <span>{app.user_email}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Phone className="w-3 h-3" />
-                                <span>{app.user_mobile}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-white/60 space-y-1">
-                            <p>Department: {app.user_department}</p>
-                            <p>Year: {app.user_year}</p>
-                            <p className="text-xs">Applied: {new Date(app.applied_at).toLocaleDateString()}</p>
-                            {app.reminder_sent && (
-                              <p className="text-xs text-green-400">✓ Reminder sent</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+          {/* Applications List */}
+          {applications === undefined ? (
+            <div className="text-center py-12 text-white/40">Loading applications...</div>
+          ) : filteredApplications.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="w-12 h-12 text-white/20 mx-auto mb-4" />
+              <p className="text-white/40">{search ? "No applicants match your search" : "No applications for this event yet"}</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto rounded-xl border border-white/10">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-white/5 text-left">
+                      <th className="px-4 py-3 text-white/60 text-sm font-medium">Name</th>
+                      <th className="px-4 py-3 text-white/60 text-sm font-medium">Email</th>
+                      <th className="px-4 py-3 text-white/60 text-sm font-medium">Mobile</th>
+                      <th className="px-4 py-3 text-white/60 text-sm font-medium">Department</th>
+                      <th className="px-4 py-3 text-white/60 text-sm font-medium">Year</th>
+                      <th className="px-4 py-3 text-white/60 text-sm font-medium">Applied</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {filteredApplications.map((app: any) => (
+                      <tr key={app._id} className="hover:bg-white/5 transition-colors">
+                        <td className="px-4 py-3 text-white text-sm">{app.user_profile?.full_name || "—"}</td>
+                        <td className="px-4 py-3 text-white/70 text-sm">{app.user_profile?.email || "—"}</td>
+                        <td className="px-4 py-3 text-white/70 text-sm">{app.user_profile?.mobile_number || "—"}</td>
+                        <td className="px-4 py-3 text-white/70 text-sm">{app.user_profile?.department || "—"}</td>
+                        <td className="px-4 py-3 text-white/70 text-sm">{app.user_profile?.year_of_study || "—"}</td>
+                        <td className="px-4 py-3 text-white/50 text-sm">{new Date(app._creationTime).toLocaleDateString()}</td>
+                      </tr>
                     ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </motion.div>
-        ))}
-      </div>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-3">
+                {filteredApplications.map((app: any) => (
+                  <motion.div
+                    key={app._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white/5 border border-white/10 rounded-xl p-4 cursor-pointer"
+                    onClick={() => setExpandedApp(expandedApp === app._id ? null : app._id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-medium">{app.user_profile?.full_name || "No name"}</p>
+                        <p className="text-white/50 text-sm">{app.user_profile?.email || ""}</p>
+                      </div>
+                      <span className="text-white/30 text-xs">{new Date(app._creationTime).toLocaleDateString()}</span>
+                    </div>
+                    {expandedApp === app._id && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3 pt-3 border-t border-white/10 space-y-2">
+                        <div className="flex items-center gap-2 text-white/60 text-sm"><Phone className="w-4 h-4" />{app.user_profile?.mobile_number || "Not provided"}</div>
+                        <div className="flex items-center gap-2 text-white/60 text-sm"><Building2 className="w-4 h-4" />{app.user_profile?.department || "Not provided"}</div>
+                        <div className="flex items-center gap-2 text-white/60 text-sm"><GraduationCap className="w-4 h-4" />{app.user_profile?.year_of_study || "Not provided"}</div>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }

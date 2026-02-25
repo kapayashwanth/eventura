@@ -1,32 +1,33 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, MapPin, User, Users, ExternalLink } from "lucide-react";
-import { ButtonColorful } from "./button-colorful";
+import { X, Calendar, MapPin, Clock, Tag, Users, ExternalLink } from "lucide-react";
 import { EventRegistrationButton } from "./event-registration-button";
 
 interface Event {
-  id: string;
+  _id: string;
   title: string;
-  description: string;
-  event_date: string;
-  registration_link?: string;
-  application_deadline?: string;
-  banner_image?: string;
-  category: string;
+  description?: string;
+  event_date?: string;
+  event_time?: string;
   location?: string;
-  organizer?: string;
-  max_participants?: number;
   status?: string;
+  category?: string;
+  banner_image?: string;
+  application_deadline?: string;
+  max_participants?: number;
+  registration_link?: string;
 }
 
 interface EventDetailsModalProps {
   event: Event | null;
   isOpen: boolean;
   onClose: () => void;
+  onLoginRequired?: () => void;
+  onProfileRequired?: () => void;
 }
 
-export function EventDetailsModal({ event, isOpen, onClose }: EventDetailsModalProps) {
+export function EventDetailsModal({ event, isOpen, onClose, onLoginRequired, onProfileRequired }: EventDetailsModalProps) {
   if (!event) return null;
 
   return (
@@ -36,166 +37,143 @@ export function EventDetailsModal({ event, isOpen, onClose }: EventDetailsModalP
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-          onClick={onClose}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && onClose()}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#111] border border-white/10 rounded-2xl"
           >
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 border border-white/10 hover:bg-white/10 transition-colors"
-            >
-              <X className="w-6 h-6 text-white" />
-            </button>
-
-            {/* Event Image */}
+            {/* Banner / Full Poster */}
             {event.banner_image && (
-              <div className="relative w-full bg-black/40">
+              <div className="relative">
                 <img
                   src={event.banner_image}
                   alt={event.title}
-                  className="w-full h-auto max-h-[60vh] object-contain"
+                  className="w-full max-h-[50vh] object-contain bg-black"
                 />
-                <div className="absolute top-4 left-4">
-                  <span className="px-4 py-2 bg-indigo-500/80 backdrop-blur-md rounded-full text-sm font-medium text-white border border-white/20">
-                    {event.category}
-                  </span>
-                </div>
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#111] to-transparent" />
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
               </div>
             )}
 
-            {/* Event Details */}
-            <div className="p-8">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-white to-rose-300">
-                {event.title}
-              </h2>
+            <div className={`p-6 sm:p-8 ${!event.banner_image ? 'pt-6' : '-mt-8 relative'}`}>
+              {/* Close button if no banner */}
+              {!event.banner_image && (
+                <div className="flex justify-end mb-4">
+                  <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                    <X className="w-5 h-5 text-white/60" />
+                  </button>
+                </div>
+              )}
 
-              <div className="grid md:grid-cols-2 gap-4 mb-6">
+              {/* Status Badge */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  event.status === 'upcoming'
+                    ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                    : event.status === 'past'
+                    ? 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                    : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                }`}>
+                  {event.status}
+                </span>
+                {event.category && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    <Tag className="w-3 h-3" />
+                    {event.category}
+                  </span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">{event.title}</h2>
+
+              {/* Meta Info */}
+              <div className="flex flex-wrap gap-4 mb-6">
                 {event.event_date && (
-                  <div className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="p-2 bg-indigo-500/20 rounded-lg">
-                      <Calendar className="w-5 h-5 text-indigo-300" />
-                    </div>
-                    <div>
-                      <p className="text-white/50 text-sm">Date & Time</p>
-                      <p className="text-white font-medium">
-                        {new Date(event.event_date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </p>
-                      <p className="text-white/70 text-sm">
-                        {new Date(event.event_date).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(event.event_date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
                   </div>
                 )}
-
-                {event.application_deadline && (
-                  <div className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-yellow-500/20">
-                    <div className="p-2 bg-yellow-500/20 rounded-lg">
-                      <Calendar className="w-5 h-5 text-yellow-300" />
-                    </div>
-                    <div>
-                      <p className="text-white/50 text-sm">Application Deadline</p>
-                      <p className="text-white font-medium">
-                        {new Date(event.application_deadline).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </p>
-                      <p className="text-yellow-300/90 text-sm">
-                        {new Date(event.application_deadline).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
+                {event.event_time && (
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <Clock className="w-4 h-4" />
+                    {event.event_time}
                   </div>
                 )}
-
                 {event.location && (
-                  <div className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="p-2 bg-rose-500/20 rounded-lg">
-                      <MapPin className="w-5 h-5 text-rose-300" />
-                    </div>
-                    <div>
-                      <p className="text-white/50 text-sm">Location</p>
-                      <p className="text-white font-medium">{event.location}</p>
-                    </div>
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <MapPin className="w-4 h-4" />
+                    {event.location}
                   </div>
                 )}
-
-                {event.organizer && (
-                  <div className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="p-2 bg-indigo-500/20 rounded-lg">
-                      <User className="w-5 h-5 text-indigo-300" />
-                    </div>
-                    <div>
-                      <p className="text-white/50 text-sm">Organized By</p>
-                      <p className="text-white font-medium">{event.organizer}</p>
-                    </div>
-                  </div>
-                )}
-
                 {event.max_participants && (
-                  <div className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="p-2 bg-rose-500/20 rounded-lg">
-                      <Users className="w-5 h-5 text-rose-300" />
-                    </div>
-                    <div>
-                      <p className="text-white/50 text-sm">Max Participants</p>
-                      <p className="text-white font-medium">{event.max_participants} people</p>
-                    </div>
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <Users className="w-4 h-4" />
+                    Max {event.max_participants} participants
                   </div>
                 )}
               </div>
 
-              {/* Description */}
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-white mb-3">About This Event</h3>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <p className="text-white/70 leading-relaxed whitespace-pre-wrap">
-                    {event.description}
+              {/* Deadline Warning */}
+              {event.application_deadline && event.status === 'upcoming' && (
+                <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                  <p className="text-amber-300 text-sm">
+                    <strong>Application Deadline:</strong>{' '}
+                    {new Date(event.application_deadline).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
                   </p>
                 </div>
-              </div>
+              )}
 
-              {/* Apply Button */}
-              {event.status !== 'past' && (
-                <div className="space-y-3">
-                  <EventRegistrationButton
-                    eventId={event.id}
-                    eventTitle={event.title}
-                    eventDate={event.event_date}
-                    applicationDeadline={event.application_deadline}
-                    variant="primary"
-                  />
-                  
-                  {/* External Link Option (if available) */}
+              {/* Description */}
+              {event.description && (
+                <div className="mb-8">
+                  <h3 className="text-white font-semibold mb-3">About this Event</h3>
+                  <div className="text-white/60 text-sm leading-relaxed whitespace-pre-wrap">
+                    {event.description}
+                  </div>
+                </div>
+              )}
+
+              {/* Registration Button */}
+              {event.status === 'upcoming' && (
+                <div className="pt-6 border-t border-white/10 flex flex-wrap gap-4 items-center">
                   {event.registration_link && (
-                    <button
-                      onClick={() => window.open(event.registration_link, '_blank')}
-                      className="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2 text-white text-sm"
+                    <a
+                      href={event.registration_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm bg-gradient-to-r from-indigo-500 to-rose-500 text-white hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg shadow-indigo-500/25"
                     >
                       <ExternalLink className="w-4 h-4" />
-                      Or Register via External Link
-                    </button>
+                      Apply Now
+                    </a>
                   )}
+                  <EventRegistrationButton
+                    eventId={event._id as any}
+                    onLoginRequired={onLoginRequired}
+                    onProfileRequired={onProfileRequired}
+                  />
                 </div>
               )}
             </div>

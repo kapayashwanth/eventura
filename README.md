@@ -1,275 +1,233 @@
-# Amrita Careers - Campus Events Platform
+# Eventura — Campus Event Management Platform
 
-A modern, full-stack web application for managing and discovering campus events at Amrita Vishwa Vidyapeetham, Nagercoil Campus. Built with React, TypeScript, and Supabase.
+A full-stack campus event management platform built with **React**, **Convex**, and **Firebase Auth**. Eventura lets students discover, apply to, and track campus events while giving administrators a complete dashboard to manage events, monitor applications, and send targeted email notifications.
 
-![Amrita Careers](https://img.shields.io/badge/Status-Active-success)
-![React](https://img.shields.io/badge/React-18.2.0-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.1.6-blue)
-![Supabase](https://img.shields.io/badge/Supabase-Latest-green)
+**Live:** [eventura.live](https://eventura.live)
 
-## 🌟 Features
+---
 
-### For Students
-- 📅 **Browse Events**: Discover upcoming hackathons, workshops, seminars, and tech talks
-- 🔍 **Smart Categorization**: Events automatically categorized as upcoming or past
-- 👤 **User Profiles**: Complete profile management with image upload
-- 🎨 **Beautiful UI**: Modern glass-morphism design with smooth animations
-- 📱 **Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
-- 🔔 **Event Details**: View comprehensive event information in interactive modals
+## Features
 
-### For Admins
-- ➕ **Event Management**: Create, edit, and delete events with ease
-- 📊 **Dashboard Analytics**: Overview of total, upcoming, and past events
-- 👥 **User Management**: View all registered users
-- 🖼️ **Image Upload**: Upload event banners with preview
-- ⚡ **Real-time Updates**: Changes reflect immediately across the platform
+### Students
+- Browse upcoming and past campus events with category filters
+- Apply/withdraw from events with one click
+- Set deadline reminders — receive email alerts before registration closes
+- View personal application history and registered events
+- Manage profile (name, department, year, bio, profile image)
 
-## 🚀 Tech Stack
+### Administrators
+- Create, edit, and delete events (with banner images, deadlines, categories)
+- View and manage all user applications
+- Full users table with profile details
+- Send bulk or individual emails to users via a built-in email composer
+- Dashboard overview with key metrics
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS + Framer Motion
-- **Backend**: Supabase (PostgreSQL + Authentication + Storage)
-- **Icons**: Lucide React
-- **Animations**: Framer Motion
+### Automated
+- **Cron: Deadline Reminders** — Hourly check sends email reminders to users who opted in, when an event deadline is within 24 hours
+- **Cron: Auto-Transition** — Automatically moves events from *upcoming* to *past* when their date/deadline passes
+- **Welcome Email** — Sent on first sign-up
+- **New Event Notification** — All registered users receive an email when a new event is published
 
-## 📋 Prerequisites
+---
 
-- Node.js 16+ and npm
-- Supabase account (free tier works)
-- Git
+## Tech Stack
 
-## 🛠️ Installation
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, TypeScript, Vite |
+| Styling | Tailwind CSS, Framer Motion, Three.js (hero shader) |
+| Backend | Convex (real-time database, mutations, actions, crons) |
+| Auth | Firebase Authentication (Email/Password + Google Sign-In) |
+| Email | ZeptoMail by Zoho (transactional email API) |
+| Hosting | Netlify (frontend) + Convex Cloud (backend) |
 
-### 1. Clone the repository
+---
 
-```bash
-git clone https://github.com/kapayashwanth/amritacareers.git
-cd amritacareers
+## Project Structure
+
+```
+├── convex/                 # Convex backend
+│   ├── schema.ts           # Database schema (events, user_profiles, event_applications)
+│   ├── events.ts           # Event CRUD mutations & queries
+│   ├── eventApplications.ts# Application mutations & queries
+│   ├── userProfiles.ts     # User profile mutations & queries
+│   ├── emails.ts           # ZeptoMail email actions (welcome, reminders, notifications)
+│   ├── emailTemplates.ts   # HTML email template builders
+│   ├── crons.ts            # Scheduled jobs (reminders + auto-transition)
+│   └── _generated/         # Auto-generated Convex types
+├── src/
+│   ├── main.tsx            # App entry — Convex & Auth providers
+│   ├── App.tsx             # Router & page layout
+│   ├── lib/
+│   │   ├── firebase.ts     # Firebase config & auth helpers
+│   │   ├── AuthContext.tsx  # React auth context provider
+│   │   ├── types.ts        # Shared TypeScript types
+│   │   └── utils.ts        # Utility functions
+│   └── components/ui/      # All UI components
+│       ├── navbar.tsx
+│       ├── footer.tsx
+│       ├── shape-landing-hero.tsx
+│       ├── events-section.tsx
+│       ├── upcoming-events-page.tsx
+│       ├── past-events-page.tsx
+│       ├── event-details-modal.tsx
+│       ├── event-registration-button.tsx
+│       ├── admin-dashboard.tsx
+│       ├── admin-email-sender.tsx
+│       ├── event-form.tsx
+│       ├── events-table.tsx
+│       ├── users-table.tsx
+│       ├── profile-page.tsx
+│       └── ...
+├── public/                 # Static assets
+├── package.json
+├── vite.config.ts
+├── tailwind.config.cjs
+└── tsconfig.json
 ```
 
-### 2. Install dependencies
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+- A [Convex](https://convex.dev) account
+- A [Firebase](https://console.firebase.google.com) project with Authentication enabled
+- A [ZeptoMail](https://www.zoho.com/zeptomail/) account (for transactional emails)
+
+### 1. Clone & Install
 
 ```bash
+git clone https://github.com/kapayashwanth/eventura.git
+cd eventura
 npm install
 ```
 
-### 3. Set up Supabase
+### 2. Configure Environment Variables
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to **Project Settings** → **API**
-3. Copy your `Project URL` and `anon/public key`
-
-### 4. Configure environment variables
-
-Create a `.env` file in the root directory:
+Create a `.env.local` file in the project root:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Convex
+VITE_CONVEX_URL=https://<your-deployment>.convex.cloud
+
+# Firebase
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-### 5. Set up database schema
+### 3. Set Up Convex
 
-Run the following SQL in your Supabase SQL Editor:
-
-<details>
-<summary>Click to expand SQL schema</summary>
-
-```sql
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- User Profiles Table
-CREATE TABLE public.user_profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    full_name TEXT NOT NULL,
-    email TEXT,
-    mobile_number TEXT,
-    department TEXT,
-    year_of_study TEXT,
-    profile_image TEXT,
-    bio TEXT,
-    role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Events Table
-CREATE TABLE public.events (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    event_date TIMESTAMPTZ NOT NULL,
-    registration_link TEXT,
-    banner_image TEXT,
-    category TEXT NOT NULL CHECK (category IN ('hackathon', 'workshop', 'tech-talk', 'seminar', 'conference', 'competition', 'webinar', 'general')),
-    status TEXT DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'past')),
-    location TEXT,
-    organizer TEXT,
-    max_participants INTEGER,
-    created_by UUID REFERENCES auth.users(id),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Event Registrations Table
-CREATE TABLE public.event_registrations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    registered_at TIMESTAMPTZ DEFAULT NOW(),
-    status TEXT DEFAULT 'registered' CHECK (status IN ('registered', 'attended', 'cancelled')),
-    UNIQUE(event_id, user_id)
-);
-
--- Event Images Table
-CREATE TABLE public.event_images (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
-    image_url TEXT NOT NULL,
-    caption TEXT,
-    display_order INTEGER DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable Row Level Security
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.event_registrations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.event_images ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies for user_profiles
-CREATE POLICY "Users can view all profiles" ON public.user_profiles FOR SELECT USING (true);
-CREATE POLICY "Users can update own profile" ON public.user_profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Users can insert own profile" ON public.user_profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
--- RLS Policies for events
-CREATE POLICY "Anyone can view events" ON public.events FOR SELECT USING (true);
-CREATE POLICY "Admins can insert events" ON public.events FOR INSERT WITH CHECK (
-    (SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'admin'
-);
-CREATE POLICY "Admins can update events" ON public.events FOR UPDATE USING (
-    (SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'admin'
-);
-CREATE POLICY "Admins can delete events" ON public.events FOR DELETE USING (
-    (SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'admin'
-);
-
--- RLS Policies for event_registrations
-CREATE POLICY "Users can view own registrations" ON public.event_registrations FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can register for events" ON public.event_registrations FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can cancel own registrations" ON public.event_registrations FOR DELETE USING (auth.uid() = user_id);
-
--- RLS Policies for event_images
-CREATE POLICY "Anyone can view event images" ON public.event_images FOR SELECT USING (true);
-CREATE POLICY "Admins can manage event images" ON public.event_images FOR ALL USING (
-    (SELECT role FROM public.user_profiles WHERE id = auth.uid()) = 'admin'
-);
-
--- Create updated_at trigger function
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Add triggers
-CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON public.user_profiles
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_events_updated_at BEFORE UPDATE ON public.events
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```bash
+npx convex dev
 ```
 
-</details>
+This will push your schema and functions to your Convex deployment.
 
-### 6. Set up Storage Buckets
+Set your ZeptoMail token as a Convex environment variable:
 
-1. Go to **Storage** in Supabase dashboard
-2. Create two public buckets:
-   - `event-banners` (for event banner images)
-   - `profile-images` (for user profile pictures)
-3. Set both buckets to **Public** access
-
-### 7. Create your first admin user
-
-After signing up in the app, run this SQL to make yourself an admin:
-
-```sql
-UPDATE public.user_profiles 
-SET role = 'admin' 
-WHERE email = 'your-email@example.com';
+```bash
+npx convex env set ZEPTOMAIL_TOKEN "your_zeptomail_api_token"
 ```
 
-### 8. Run the development server
+### 4. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Visit `http://localhost:5173` to see the app running!
-
-## 📦 Build for Production
-
-```bash
-npm run build
-```
-
-The production-ready files will be in the `dist/` directory.
-
-## 🎯 Usage
-
-### For Students
-
-1. **Sign Up**: Create an account with your email
-2. **Complete Profile**: Add mobile number, department, and year
-3. **Browse Events**: Explore upcoming and past events
-4. **View Details**: Click on any event to see full details
-5. **Register**: Click "Register" to sign up for events
-
-### For Admins
-
-1. **Access Admin Panel**: Navigate to `yoursite.com/#admin`
-2. **Create Events**: Click "Create Event" and fill in details
-3. **Manage Events**: Edit or delete existing events
-4. **View Users**: See all registered users
-
-## 🎨 Features Highlight
-
-- **Grayscale Past Events**: Past events appear in grayscale and gain color on hover
-- **Automatic Status**: Events automatically categorized based on date
-- **Profile Completion**: Users must complete their profile before full access
-- **Responsive Navbar**: Beautiful dropdown menu for authenticated users
-- **Smooth Animations**: Framer Motion animations throughout the app
-- **Cursor-Tracking Effects**: Interactive button animations
-
-## 🔐 Security
-
-- Row Level Security (RLS) enabled on all tables
-- Admin-only access for event management
-- Secure authentication via Supabase Auth
-- Email verification for new users
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📧 Contact
-
-For support or queries, reach out to:
-- Email: support@myamrita.me
-- Email: careers@myamrita.me
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🏫 About
-
-Developed for **Amrita Vishwa Vidyapeetham, Nagercoil Campus** to help students discover and participate in campus events, workshops, and opportunities.
+The app will be available at `http://localhost:5173`.
 
 ---
 
-Made with ❤️ by the Amrita Developer Community
+## Deployment
+
+### Convex (Backend)
+
+```bash
+npx convex deploy
+```
+
+### Netlify (Frontend)
+
+| Setting | Value |
+|---------|-------|
+| Build command | `npm run build` |
+| Publish directory | `dist` |
+
+Add these environment variables in **Netlify > Site settings > Environment variables**:
+
+| Variable | Value |
+|----------|-------|
+| `VITE_CONVEX_URL` | `https://<your-prod-deployment>.convex.cloud` |
+| `VITE_FIREBASE_API_KEY` | your Firebase API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | your Firebase auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | your Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | your Firebase storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | your Firebase messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | your Firebase app ID |
+
+> **Note:** `ZEPTOMAIL_TOKEN` is a server-side Convex environment variable — it does **not** go in Netlify.
+
+---
+
+## Database Schema
+
+### `events`
+| Field | Type | Description |
+|-------|------|-------------|
+| title | string | Event name |
+| description | string? | Event description |
+| event_date | string | Date of the event |
+| event_time | string? | Time of the event |
+| registration_link | string? | External registration URL |
+| application_deadline | string? | Deadline for applications |
+| banner_image | string? | Banner image URL |
+| category | string? | hackathon, workshop, tech-talk, seminar, conference, competition, webinar, general |
+| status | string | upcoming, past, or cancelled |
+| location | string? | Venue |
+| organizer | string? | Organizing body |
+| max_participants | number? | Capacity limit |
+| created_by | string? | Creator's Firebase UID |
+
+### `user_profiles`
+| Field | Type | Description |
+|-------|------|-------------|
+| firebase_uid | string | Firebase UID |
+| full_name | string | Display name |
+| email | string | Email address |
+| mobile_number | string? | Phone number |
+| department | string? | Academic department |
+| year_of_study | string? | Current year |
+| profile_image | string? | Avatar URL |
+| bio | string? | Short bio |
+| role | string | user or admin |
+
+### `event_applications`
+| Field | Type | Description |
+|-------|------|-------------|
+| user_id | string | Firebase UID |
+| event_id | Id\<events\> | Reference to event |
+| is_applied | boolean | Application status |
+| applied_at | string | Timestamp |
+| reminder_sent | boolean | Whether reminder email was sent |
+
+---
+
+## Contact
+
+- **Admin:** [admin@kapayashwanth.me](mailto:admin@kapayashwanth.me)
+- **Team:** [team@eventura.live](mailto:team@eventura.live)
+
+---
+
+## License
+
+This project is proprietary. All rights reserved.

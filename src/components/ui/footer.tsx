@@ -61,11 +61,11 @@ export function Footer() {
                 <div>
                   <p className="text-white/60 text-sm">Email</p>
                   <div className="space-y-0.5">
-                    <a href="mailto:support@myamrita.me" className="block text-white hover:text-indigo-400 text-sm transition-colors">
-                      support@myamrita.me
+                    <a href="mailto:admin@kapayashwanth.me" className="block text-white hover:text-indigo-400 text-sm transition-colors">
+                      admin@kapayashwanth.me
                     </a>
-                    <a href="mailto:careers@myamrita.me" className="block text-white hover:text-indigo-400 text-sm transition-colors">
-                      careers@myamrita.me
+                    <a href="mailto:team@eventura.live" className="block text-white hover:text-indigo-400 text-sm transition-colors">
+                      team@eventura.live
                     </a>
                   </div>
                 </div>
@@ -91,7 +91,7 @@ export function Footer() {
         <div className="pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-white/50 text-sm">
-              © {currentYear} Amrita Vishwa Vidyapeetham. All rights reserved.
+              © {currentYear} Eventura. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
               <a href="#" className="text-white/50 hover:text-white text-sm transition-colors">

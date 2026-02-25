@@ -67,3 +67,4 @@ WELCOME_EMAIL_EDGE_FUNCTION.ts
 *.tmp
 *.temp
 .cache/
+migrate-supabase-to-convex.mjs

@@ -1,340 +1,193 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import { Calendar, MapPin, ExternalLink, Users, User, Eye } from "lucide-react";
-import { supabase, Event } from "@/lib/supabase";
-import { EventBanner } from "./event-banner";
-import { ButtonColorful } from "./button-colorful";
+import { Calendar, MapPin, Clock, ArrowRight, Users, Eye } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { EventDetailsModal } from "./event-details-modal";
 import { EventRegistrationButton } from "./event-registration-button";
 
 interface EventsSectionProps {
-  onViewUpcoming?: () => void;
-  onViewPast?: () => void;
+  onViewAllUpcoming?: () => void;
+  onViewAllPast?: () => void;
+  onEventClick?: (event: any) => void;
+  onLoginRequired?: () => void;
+  onProfileRequired?: () => void;
 }
 
-export function EventsSection({ onViewUpcoming, onViewPast }: EventsSectionProps) {
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [pastEvents, setPastEvents] = useState<Event[]>([]);
-  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
-  const [showAllPast, setShowAllPast] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export function EventsSection({ onViewAllUpcoming, onViewAllPast, onEventClick, onLoginRequired, onProfileRequired }: EventsSectionProps) {
+  const upcomingEvents = useQuery(api.events.getByStatus, { status: "upcoming" });
+  const pastEvents = useQuery(api.events.getByStatus, { status: "past" });
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
-  const handleViewDetails = (event: Event) => {
+  const displayUpcoming = (upcomingEvents || []).slice(0, 3);
+  const displayPast = (pastEvents || []).slice(0, 3);
+
+  const handleViewDetails = (event: any, e: React.MouseEvent) => {
+    e.stopPropagation();
     setSelectedEvent(event);
-    setIsModalOpen(true);
   };
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      
-      // Check if Supabase is configured
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-      
-      // Fetch upcoming events
-      const { data: upcoming, error: upcomingError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('status', 'upcoming')
-        .order('event_date', { ascending: true });
-
-      if (upcomingError) throw upcomingError;
-
-      // Fetch past events
-      const { data: past, error: pastError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('status', 'past')
-        .order('event_date', { ascending: false });
-
-      if (pastError) throw pastError;
-
-      setUpcomingEvents(upcoming || []);
-      setPastEvents(past || []);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const displayedUpcoming = showAllUpcoming ? upcomingEvents : upcomingEvents.slice(0, 6);
-  const displayedPast = showAllPast ? pastEvents : pastEvents.slice(0, 6);
-
-  if (loading) {
-    return (
-      <section className="relative min-h-screen w-full bg-[#030303] py-12 md:py-20">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-white/50 text-lg">
-              {!supabase ? (
-                <div className="text-center">
-                  <p className="mb-2">⚠️ Supabase is not configured yet</p>
-                  <p className="text-sm">Please follow SUPABASE_SETUP.md to set up your database</p>
-                </div>
-              ) : (
-                'Loading events...'
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className="relative min-h-screen w-full bg-[#030303] py-12 md:py-20" id="upcoming-events">
-      <div className="container mx-auto px-4 md:px-6">
-        {/* Hero Banner */}
-        {upcomingEvents.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-16 md:mb-24"
-          >
-            <EventBanner events={upcomingEvents.slice(0, 5)} />
-          </motion.div>
-        )}
-
-        {/* Upcoming Events Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="mb-16 md:mb-24"
-        >
-          <div className="flex items-center justify-between mb-8 md:mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 to-rose-300">
-              Upcoming Events
-            </h2>
-          </div>
-
-          {upcomingEvents.length === 0 ? (
-            <div className="text-center py-12 text-white/50">
-              <p className="text-lg">No upcoming events at the moment. Check back soon!</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-                {displayedUpcoming.map((event, index) => (
-                  <EventCard 
-                    key={event.id} 
-                    event={event} 
-                    index={index} 
-                    onViewDetails={handleViewDetails}
-                  />
-                ))}
-              </div>
-
-              {/* Always show View More button to navigate to dedicated page */}
-              <div className="flex justify-center mt-8">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onViewUpcoming}
-                  className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-rose-500 rounded-full text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  View More Upcoming Events
-                </motion.button>
-              </div>
-            </>
-          )}
-        </motion.div>
-
-        {/* Past Events Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          id="past-events"
-        >
-          <div className="flex items-center justify-between mb-8 md:mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-300 to-indigo-300">
-              Past Events
-            </h2>
-          </div>
-
-          {pastEvents.length === 0 ? (
-            <div className="text-center py-12 text-white/50">
-              <p className="text-lg">No past events to display.</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-                {displayedPast.map((event, index) => (
-                  <EventCard 
-                    key={event.id} 
-                    event={event} 
-                    index={index} 
-                    isPast 
-                    onViewDetails={handleViewDetails}
-                  />
-                ))}
-              </div>
-
-              {/* Always show View More button to navigate to dedicated page */}
-              <div className="flex justify-center mt-8">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onViewPast}
-                  className="px-8 py-3 bg-gradient-to-r from-rose-500 to-indigo-500 rounded-full text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  View More Past Events
-                </motion.button>
-              </div>
-            </>
-          )}
-        </motion.div>
-      </div>
-
-      {/* Event Details Modal */}
-      <EventDetailsModal
-        event={selectedEvent}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </section>
-  );
-}
-
-function EventCard({ 
-  event, 
-  index, 
-  isPast = false,
-  onViewDetails 
-}: { 
-  event: Event; 
-  index: number; 
-  isPast?: boolean;
-  onViewDetails: (event: Event) => void;
-}) {
-  const eventDate = new Date(event.event_date);
-
-  return (
+  const EventCard = ({ event, index }: { event: any; index: number }) => (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
-      whileHover={{ y: -10 }}
-      className={`group relative h-full flex flex-col ${isPast ? 'grayscale hover:grayscale-0' : ''}`}
-      style={{ transition: 'filter 0.5s ease' }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: index * 0.15 }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      className={`group relative cursor-pointer ${event.status === 'past' ? 'grayscale hover:grayscale-0' : ''}`}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-rose-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500 opacity-0 group-hover:opacity-100" />
+      {/* Glow background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-3xl blur-xl group-hover:from-white/15 group-hover:via-white/10 transition-all duration-500" />
       
-      <div className={`relative bg-white/[0.02] backdrop-blur-sm border border-white/10 group-hover:border-white/20 rounded-2xl overflow-hidden transition-all duration-500 h-full flex flex-col ${isPast ? 'opacity-70 group-hover:opacity-100' : ''}`}>
-        {/* Banner Image */}
-        {event.banner_image ? (
-          <div className="relative h-48 sm:h-56 overflow-hidden bg-black/20 flex-shrink-0">
+      <div className="relative h-full flex flex-col bg-white/[0.03] backdrop-blur-md border border-white/20 group-hover:border-white/30 rounded-3xl overflow-hidden shadow-[0_8px_32px_0_rgba(255,255,255,0.05)] group-hover:shadow-[0_8px_32px_0_rgba(255,255,255,0.1)] transition-all duration-500">
+        {event.banner_image && (
+          <div className="relative h-48 overflow-hidden flex-shrink-0">
             <img
               src={event.banner_image}
               alt={event.title}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            
-            {/* Category Badge */}
-            <div className="absolute top-3 sm:top-4 left-3 sm:left-4">
-              <span className="px-2 sm:px-3 py-1 rounded-full bg-indigo-500/80 backdrop-blur-sm text-white text-xs font-medium uppercase">
-                {event.category}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-3 left-3">
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${
+                event.status === 'upcoming'
+                  ? 'bg-green-500/20 text-green-200 border border-green-500/30'
+                  : 'bg-gray-500/20 text-gray-200 border border-gray-500/30'
+              }`}>
+                {event.status}
               </span>
             </div>
-
-            {/* Status Badge */}
-            {isPast && (
-              <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
-                <span className="px-2 sm:px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-medium">
-                  Completed
-                </span>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="h-48 sm:h-56 bg-gradient-to-br from-indigo-500/20 to-rose-500/20 flex items-center justify-center flex-shrink-0">
-            <div className="text-white/30 text-3xl sm:text-4xl font-bold">{event.category.toUpperCase()}</div>
           </div>
         )}
-
-        {/* Content */}
-        <div className="p-4 sm:p-6 flex flex-col flex-grow">
-          <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-300 group-hover:to-rose-300 transition-all duration-300 line-clamp-2">
+        <div className="p-6 flex flex-col flex-grow">
+          <h3 className="text-white font-bold text-lg mb-2 line-clamp-2 group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-indigo-300 group-hover:to-rose-300 transition-all duration-300">
             {event.title}
           </h3>
-
-          <p className="text-white/60 text-xs sm:text-sm md:text-base mb-3 sm:mb-4 line-clamp-2 flex-grow">
-            {event.description}
-          </p>
-
-          {/* Meta Info */}
-          <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
-            <div className="flex items-center gap-2 text-white/50 text-xs sm:text-sm">
-              <Calendar className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="truncate">
-                {eventDate.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
-            </div>
-
-            {event.location && (
-              <div className="flex items-center gap-2 text-white/50 text-xs sm:text-sm">
-                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="truncate">{event.location}</span>
+          {event.description && (
+            <p className="text-white/50 text-sm mb-4 line-clamp-2 leading-relaxed">{event.description}</p>
+          )}
+          <div className="flex flex-wrap gap-3 mb-5 mt-auto">
+            {event.event_date && (
+              <div className="flex items-center gap-1.5 text-white/50 text-xs">
+                <Calendar className="w-3.5 h-3.5" />
+                {new Date(event.event_date).toLocaleDateString()}
               </div>
             )}
-
-            {event.organizer && (
-              <div className="flex items-center gap-2 text-white/50 text-xs sm:text-sm">
-                <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="truncate">{event.organizer}</span>
+            {event.event_time && (
+              <div className="flex items-center gap-1.5 text-white/50 text-xs">
+                <Clock className="w-3.5 h-3.5" />
+                {event.event_time}
+              </div>
+            )}
+            {event.location && (
+              <div className="flex items-center gap-1.5 text-white/50 text-xs">
+                <MapPin className="w-3.5 h-3.5" />
+                {event.location}
               </div>
             )}
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-2 sm:gap-3 mt-auto">
+          <div className="flex gap-2">
             <button
-              onClick={() => onViewDetails(event)}
-              className="w-full group/view relative px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500/20 to-rose-500/20 border border-indigo-300/30 hover:border-rose-300/50 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden"
+              onClick={(e) => handleViewDetails(event, e)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-rose-500 text-white hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 text-sm font-medium shadow-lg shadow-indigo-500/25"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-rose-500/10 opacity-0 group-hover/view:opacity-100 transition-opacity duration-300" />
-              <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-300 group-hover/view:text-rose-300 transition-colors relative z-10" />
-              <span className="text-xs sm:text-sm font-medium text-white relative z-10">View Details</span>
+              <Eye className="w-4 h-4" />
+              View Details
             </button>
-            
-            {!isPast && (
-              <EventRegistrationButton
-                eventId={event.id}
-                eventTitle={event.title}
-                eventDate={event.event_date}
-                applicationDeadline={event.application_deadline}
-                variant="primary"
-                className="text-xs sm:text-sm"
-              />
+            {event.status === 'upcoming' && (
+              <div onClick={(e) => e.stopPropagation()}>
+                <EventRegistrationButton eventId={event._id} onLoginRequired={onLoginRequired} onProfileRequired={onProfileRequired} />
+              </div>
             )}
           </div>
         </div>
       </div>
     </motion.div>
+  );
+
+  return (
+    <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Upcoming Events */}
+        <div className="mb-20">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-white/90 to-rose-300">Upcoming Events</span>
+            </h2>
+            <p className="text-white/50 text-sm md:text-base">Don't miss out on these events</p>
+          </div>
+          <div className="flex justify-end mb-6">
+            {(upcomingEvents || []).length > 3 && (
+              <button
+                onClick={onViewAllUpcoming}
+                className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-rose-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg shadow-indigo-500/25"
+              >
+                View All <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {upcomingEvents === undefined ? (
+            <div className="text-center py-12 text-white/40">Loading events...</div>
+          ) : displayUpcoming.length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className="w-12 h-12 text-white/20 mx-auto mb-4" />
+              <p className="text-white/40">No upcoming events at the moment</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {displayUpcoming.map((event: any, i: number) => (
+                <EventCard key={event._id} event={event} index={i} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Past Events */}
+        <div id="past-events">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-white/90 to-rose-300">Past Events</span>
+            </h2>
+            <p className="text-white/50 text-sm md:text-base">Events that have already taken place</p>
+          </div>
+          <div className="flex justify-end mb-6">
+            {(pastEvents || []).length > 3 && (
+              <button
+                onClick={onViewAllPast}
+                className="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-rose-500 text-white text-sm font-medium hover:from-indigo-600 hover:to-rose-600 transition-all duration-300 shadow-lg shadow-indigo-500/25"
+              >
+                View All <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {pastEvents === undefined ? (
+            <div className="text-center py-12 text-white/40">Loading events...</div>
+          ) : displayPast.length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className="w-12 h-12 text-white/20 mx-auto mb-4" />
+              <p className="text-white/40">No past events yet</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {displayPast.map((event: any, i: number) => (
+                <EventCard key={event._id} event={event} index={i} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Event Details Modal */}
+      <EventDetailsModal
+        event={selectedEvent}
+        isOpen={!!selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        onLoginRequired={onLoginRequired}
+        onProfileRequired={onProfileRequired}
+      />
+    </section>
   );
 }

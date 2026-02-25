@@ -1,212 +1,110 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import { Calendar, MapPin, X, Clock, Trash2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-
-interface AppliedEvent {
-  id: string;
-  event_id: string;
-  applied_at: string;
-  event_title: string;
-  event_date: string;
-  application_deadline: string;
-  event_location?: string;
-  event_category: string;
-  reminder_sent: boolean;
-}
+import { Calendar, MapPin, Clock, Trash2, ExternalLink } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 export function AppliedEventsSection() {
-  const [appliedEvents, setAppliedEvents] = useState<AppliedEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { user } = useAuth();
 
-  useEffect(() => {
-    fetchAppliedEvents();
-  }, []);
+  const applications = useQuery(
+    api.eventApplications.getByUser,
+    user ? { user_id: user.uid } : "skip"
+  );
+  const removeApplication = useMutation(api.eventApplications.remove);
 
-  const fetchAppliedEvents = async () => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
+  const handleRemove = async (applicationId: string) => {
+    if (!confirm("Are you sure you want to withdraw this application?")) return;
     try {
-      setLoading(true);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setError("Please login to view applied events");
-        setLoading(false);
-        return;
-      }
-
-      // Get applied events with event details
-      const { data, error: fetchError } = await supabase
-        .from('event_applications')
-        .select(`
-          id,
-          event_id,
-          applied_at,
-          is_applied,
-          reminder_sent,
-          events:event_id (
-            title,
-            event_date,
-            application_deadline,
-            location,
-            category
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('is_applied', true)
-        .order('applied_at', { ascending: false });
-
-      if (fetchError) throw fetchError;
-
-      // Transform data
-      const events = (data || []).map((app: any) => ({
-        id: app.id,
-        event_id: app.event_id,
-        applied_at: app.applied_at,
-        event_title: app.events?.title || 'Unknown Event',
-        event_date: app.events?.event_date,
-        application_deadline: app.events?.application_deadline,
-        event_location: app.events?.location,
-        event_category: app.events?.category,
-        reminder_sent: app.reminder_sent
-      }));
-
-      setAppliedEvents(events);
-    } catch (err: any) {
-      console.error("Error fetching applied events:", err);
-      setError(err.message || "Failed to load applied events");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRemoveApplication = async (applicationId: string, eventTitle: string) => {
-    if (!confirm(`Remove "${eventTitle}" from applied events?`)) return;
-
-    try {
-      const { error } = await supabase
-        .from('event_applications')
-        .update({ is_applied: false })
-        .eq('id', applicationId);
-
-      if (error) throw error;
-
-      // Remove from list
-      setAppliedEvents(prev => prev.filter(e => e.id !== applicationId));
+      await removeApplication({ id: applicationId as any });
     } catch (err: any) {
       console.error("Error removing application:", err);
-      alert("Failed to remove application. Please try again.");
     }
   };
 
-  if (loading) {
+  if (applications === undefined) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-        <h2 className="text-2xl font-bold text-white mb-4">My Applied Events</h2>
-        <div className="text-white/50 text-center py-8">Loading...</div>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-white/60">Loading applications...</div>
       </div>
     );
   }
 
-  if (error) {
+  if (!applications || applications.length === 0) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-        <h2 className="text-2xl font-bold text-white mb-4">My Applied Events</h2>
-        <div className="text-red-400 text-center py-8">{error}</div>
+      <div className="text-center py-12">
+        <Calendar className="w-12 h-12 text-white/20 mx-auto mb-4" />
+        <p className="text-white/40 text-lg">No applications yet</p>
+        <p className="text-white/30 text-sm mt-2">Apply to events to see them here</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-      <h2 className="text-2xl font-bold text-white mb-4">My Applied Events</h2>
-      
-      {appliedEvents.length === 0 ? (
-        <div className="text-white/50 text-center py-8">
-          <p>You haven't applied to any events yet.</p>
-          <p className="text-sm mt-2">Browse events and click "Mark as Applied" to track them here.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {appliedEvents.map((event, index) => (
-            <motion.div
-              key={event.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-300"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-1">{event.event_title}</h3>
-                      <span className="inline-block px-2 py-1 bg-indigo-500/20 rounded-full text-xs text-indigo-300">
-                        {event.event_category}
-                      </span>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+        <Calendar className="w-5 h-5 text-indigo-400" />
+        My Applications ({applications.length})
+      </h3>
+      <div className="grid gap-4">
+        {applications.map((app: any) => (
+          <motion.div
+            key={app._id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 hover:bg-white/[0.07] transition-colors"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h4 className="text-white font-medium text-lg">{app.events?.title || "Event"}</h4>
+                <div className="flex flex-wrap gap-4 mt-2">
+                  {app.events?.event_date && (
+                    <div className="flex items-center gap-1 text-white/50 text-sm">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(app.events.event_date).toLocaleDateString()}
                     </div>
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    {event.event_date && (
-                      <div className="flex items-center gap-2 text-white/60">
-                        <Calendar className="w-4 h-4 flex-shrink-0" />
-                        <span>Event: {new Date(event.event_date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}</span>
-                      </div>
-                    )}
-
-                    {event.application_deadline && (
-                      <div className="flex items-center gap-2 text-white/60">
-                        <Clock className="w-4 h-4 flex-shrink-0" />
-                        <span>Deadline: {new Date(event.application_deadline).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}</span>
-                      </div>
-                    )}
-
-                    {event.event_location && (
-                      <div className="flex items-center gap-2 text-white/60">
-                        <MapPin className="w-4 h-4 flex-shrink-0" />
-                        <span>{event.event_location}</span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2 text-white/40 text-xs mt-2">
-                      <span>Applied: {new Date(event.applied_at).toLocaleDateString()}</span>
-                      {event.reminder_sent && (
-                        <span className="text-green-400">• Reminder sent</span>
-                      )}
+                  )}
+                  {app.events?.event_time && (
+                    <div className="flex items-center gap-1 text-white/50 text-sm">
+                      <Clock className="w-4 h-4" />
+                      {app.events.event_time}
                     </div>
-                  </div>
+                  )}
+                  {app.events?.location && (
+                    <div className="flex items-center gap-1 text-white/50 text-sm">
+                      <MapPin className="w-4 h-4" />
+                      {app.events.location}
+                    </div>
+                  )}
                 </div>
-
+                <div className="mt-2">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    app.events?.status === 'upcoming'
+                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                      : 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                  }`}>
+                    {app.events?.status || "unknown"}
+                  </span>
+                  <span className="text-white/30 text-xs ml-3">
+                    Applied on {new Date(app._creationTime).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleRemoveApplication(event.id, event.event_title)}
-                  className="flex-shrink-0 p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-colors group"
-                  title="Remove from applied events"
+                  onClick={() => handleRemove(app._id)}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 rounded-xl text-sm transition-colors"
                 >
-                  <Trash2 className="w-4 h-4 text-red-400 group-hover:text-red-300" />
+                  <Trash2 className="w-4 h-4" />
+                  Withdraw
                 </button>
               </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
