@@ -19,19 +19,25 @@ export function ContactSection() {
     setFormData({ ...formData, [field]: value });
   };
 
+  const encode = (data: Record<string, string>) => {
+    return Object.keys(data)
+      .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
+      .join("&");
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
     
-    const form = e.target as HTMLFormElement;
-    const formDataObj = new FormData(form);
-    
     try {
       const response = await fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(formDataObj as any).toString(),
+        body: encode({
+          "form-name": "contact",
+          ...formData,
+        }),
       });
       
       if (response.ok) {
